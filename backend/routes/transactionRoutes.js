@@ -90,40 +90,32 @@ router.delete("/:id", async (req, res) => {
 });
 
 //summary of transaction
-router.get("/summary", async (req, res) => {
+router.get('/summary', async (req, res) => {
   try {
-    const { category } = req.query;
+      const transactions = await Transaction.find(fliter.req.query); // Fetch all transactions
 
-    // Initialize filter object
-    let filter = {};
+      let totalIncome = 0;
+      let totalExpenses = 0;
 
-    // If category is provided, filter by category
-    if (category) {
-      filter.category = category;
-    }
-    const transactions = await Transaction.find(filter);
+      // Loop through transactions to calculate totals
+      transactions.forEach(transaction => {
+          if (transaction.type === 'income') {
+              totalIncome += transaction.amount;
+          } else if (transaction.type === 'expense') {
+              totalExpenses += transaction.amount;
+          }
+      });
 
-    let totalIncome = 0;
-    let totalExpense = 0;
+      const balance = totalIncome - totalExpenses;
 
-    // Loop through transactions and calculate totals
-    transactions.forEach((transaction) => {
-      if (transaction.type === "income") {
-        totalIncome += transaction.amount;
-      } else if (transaction.type === "expense") {
-        totalExpense += transaction.amount;
-      }
-    });
-
-    const balance = totalIncome - totalExpense;
-
-    res.status(200).json({
-      totalIncome,
-      totalExpense,
-      balance,
-    });
+      // Send the summary in response
+      res.json({
+          totalIncome,
+          totalExpenses,
+          balance
+      });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error.message });
   }
 });
 
